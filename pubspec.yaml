@@ -1,0 +1,32 @@
+name: log_kit
+description: >
+  Reusable log retention (in-memory ring buffer + rotating file storage) and
+  shared log dump/export for Flutter apps.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  archive: ^4.0.7
+  path: ^1.9.0
+  path_provider: ^2.1.6
+  share_plus: ^13.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.flutterplugin.log_kit
+        pluginClass: LogKitPlugin
+      ios:
+        pluginClass: LogKitPlugin
