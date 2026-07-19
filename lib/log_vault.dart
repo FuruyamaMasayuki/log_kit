@@ -7,7 +7,7 @@ export 'src/dump/log_dumper.dart';
 export 'src/dump/share_log_dumper.dart';
 export 'src/log_entry.dart';
 export 'src/log_formatter.dart';
-export 'src/log_kit.dart';
+export 'src/log_vault.dart';
 export 'src/log_level.dart';
 export 'src/log_retention_policy.dart';
 export 'src/native_bridge.dart';

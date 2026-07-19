@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:log_kit/log_kit.dart';
+import 'package:log_vault/log_vault.dart';
 
 LogEntry _entry(String message) => LogEntry(
   timestamp: DateTime(2026, 1, 1),
@@ -13,7 +13,7 @@ void main() {
   late Directory tempDir;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('log_kit_test_');
+    tempDir = await Directory.systemTemp.createTemp('log_vault_test_');
   });
 
   tearDown(() async {

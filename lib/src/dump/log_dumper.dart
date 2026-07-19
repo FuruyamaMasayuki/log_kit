@@ -9,10 +9,10 @@ import '../sinks/file_sink.dart';
 
 /// Builds a zip archive of the log directory (+ `metadata.json`) with no UI
 /// or `share_plus` dependency, so callers with their own upload/support
-/// flow can use it standalone (`LogKit.dumpLogs`); `shareLogs` layers a
+/// flow can use it standalone (`LogVault.dumpLogs`); `shareLogs` layers a
 /// share-sheet call on top of this.
 ///
-/// Reuse a single [LogDumper] instance across calls (as `LogKit` does)
+/// Reuse a single [LogDumper] instance across calls (as `LogVault` does)
 /// rather than constructing a new one per dump — [dumpLogs] deletes the
 /// *previous* dump produced by the same instance before building a new
 /// one, which bounds leaked temp files to at most one stale zip rather
@@ -69,7 +69,7 @@ class LogDumper {
     await flush?.call();
     await _disposeLastDumpImpl();
 
-    final tempRoot = await Directory.systemTemp.createTemp('log_kit_dump_');
+    final tempRoot = await Directory.systemTemp.createTemp('log_vault_dump_');
     _lastTempRoot = tempRoot;
     final snapshotDir = Directory(p.join(tempRoot.path, 'logs'));
     await snapshotDir.create(recursive: true);

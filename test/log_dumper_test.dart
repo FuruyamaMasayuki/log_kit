@@ -3,13 +3,13 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:log_kit/log_kit.dart';
+import 'package:log_vault/log_vault.dart';
 
 void main() {
   late Directory tempDir;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('log_kit_dump_test_');
+    tempDir = await Directory.systemTemp.createTemp('log_vault_dump_test_');
   });
 
   tearDown(() async {
@@ -76,7 +76,7 @@ void main() {
     },
   );
 
-  test('only copies files matching the log_kit file name pattern', () async {
+  test('only copies files matching the log_vault file name pattern', () async {
     await File('${tempDir.path}/log_20260305.log').writeAsString('line\n');
     await File('${tempDir.path}/unrelated.txt').writeAsString('noise\n');
 

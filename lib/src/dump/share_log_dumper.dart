@@ -50,11 +50,11 @@ class ShareLogDumper {
     final renderObject = context.findRenderObject();
     if (renderObject is! RenderBox || !renderObject.attached) {
       developer.log(
-        'log_kit ShareLogDumper: could not resolve sharePositionOrigin '
+        'log_vault ShareLogDumper: could not resolve sharePositionOrigin '
         'from context (no attached RenderBox) — the share sheet may fail '
         'or mis-position on iPad. Pass sharePositionOrigin explicitly to '
         'avoid this.',
-        name: 'log_kit',
+        name: 'log_vault',
         level: 900,
       );
       return null;

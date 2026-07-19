@@ -1,9 +1,9 @@
 import Flutter
 import UIKit
 
-/// Registers the `log_kit` `FlutterMethodChannel` against the running
+/// Registers the `log_vault` `FlutterMethodChannel` against the running
 /// Flutter engine so native (Swift/Obj-C) app code can forward log lines
-/// to Dart's `LogKit` via `LogKitNative`, without holding its own
+/// to Dart's `LogVault` via `LogVaultNative`, without holding its own
 /// reference to the channel or `FlutterBinaryMessenger`.
 ///
 /// Publishes itself to the engine's plugin registry via
@@ -12,15 +12,15 @@ import UIKit
 /// instances registered through `publish:` — `addMethodCallDelegate`
 /// alone does not opt in to it. Without the detach callback, an
 /// add-to-app / `FlutterEngineGroup` setup with multiple engines would
-/// have no way to tell `LogKitNative` "this specific engine is gone"
+/// have no way to tell `LogVaultNative` "this specific engine is gone"
 /// without risking clobbering a different, still-live engine.
-public class LogKitPlugin: NSObject, FlutterPlugin {
+public class LogVaultPlugin: NSObject, FlutterPlugin {
   private var channel: FlutterMethodChannel?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let instance = LogKitPlugin()
+    let instance = LogVaultPlugin()
     let channel = FlutterMethodChannel(
-      name: "log_kit",
+      name: "log_vault",
       binaryMessenger: registrar.messenger()
     )
     instance.channel = channel
@@ -29,11 +29,11 @@ public class LogKitPlugin: NSObject, FlutterPlugin {
     // native -> Dart only (Dart never calls back into native on it), so
     // no addMethodCallDelegate/handle() is needed.
     registrar.publish(instance)
-    LogKitNative.attach(channel: channel)
+    LogVaultNative.attach(channel: channel)
   }
 
   public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
-    LogKitNative.detachIf(channel: channel)
+    LogVaultNative.detachIf(channel: channel)
     channel = nil
   }
 }

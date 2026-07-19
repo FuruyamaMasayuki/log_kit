@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../log_formatter.dart';
-import '../log_kit.dart';
+import '../log_vault.dart';
 
-/// A minimal in-app log viewer over `LogKit.recentEntries` (the ring
-/// buffer), with a share action that calls `LogKit.shareLogs`.
+/// A minimal in-app log viewer over `LogVault.recentEntries` (the ring
+/// buffer), with a share action that calls `LogVault.shareLogs`.
 ///
 /// This only shows entries logged on the current isolate since [init] —
 /// it is a quick on-device triage tool, not a substitute for the full
-/// on-disk log files that [LogKit.shareLogs] exports.
+/// on-disk log files that [LogVault.shareLogs] exports.
 class LogViewerPage extends StatelessWidget {
   const LogViewerPage({super.key, this.formatter = const LogFormatter()});
 
@@ -16,7 +16,7 @@ class LogViewerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = LogKit.recentEntries.reversed.toList(growable: false);
+    final entries = LogVault.recentEntries.reversed.toList(growable: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Logs'),
@@ -49,7 +49,7 @@ class LogViewerPage extends StatelessWidget {
   }
 
   Future<void> _shareLogs(BuildContext context) async {
-    final directory = LogKit.logFilesDirectory;
+    final directory = LogVault.logFilesDirectory;
     final hasFiles =
         directory != null &&
         await directory.exists() &&
@@ -74,6 +74,6 @@ class LogViewerPage extends StatelessWidget {
       return;
     }
     if (!context.mounted) return;
-    await LogKit.shareLogs(context);
+    await LogVault.shareLogs(context);
   }
 }

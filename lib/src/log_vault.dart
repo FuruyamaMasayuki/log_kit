@@ -23,10 +23,10 @@ import 'sinks/ring_buffer_sink.dart';
 /// Call [init] once (typically in `main()`, before `runApp`); it is also
 /// safe to call from background isolate entry points (workmanager,
 /// FCM background handler, ...) — see [init] for the idempotency contract.
-class LogKit {
-  LogKit._();
+class LogVault {
+  LogVault._();
 
-  static LogKitConfig? _config;
+  static LogVaultConfig? _config;
   static final List<LogSink> _sinks = [];
   static FileSink? _fileSink;
   static RingBufferSink? _ringBuffer;
@@ -58,16 +58,16 @@ class LogKit {
   /// logging degrades to console-only rather than taking the app down.
   /// [logFilesDirectory] / [dumpLogs] / [shareLogs] reflect the degraded
   /// state (see their docs).
-  static Future<void> init(LogKitConfig config) {
+  static Future<void> init(LogVaultConfig config) {
     final existing = _initFuture;
     if (existing != null) {
       developer.log(
-        'LogKit.init() called more than once; keeping the first config.',
-        name: 'log_kit',
+        'LogVault.init() called more than once; keeping the first config.',
+        name: 'log_vault',
         level: 900,
       );
       // Await the FIRST call's future, not a fresh no-op — a caller that
-      // does `await LogKit.init(...)` must only see it resolve once
+      // does `await LogVault.init(...)` must only see it resolve once
       // logging is actually ready, even if another call site raced it.
       return existing;
     }
@@ -79,7 +79,7 @@ class LogKit {
     return future;
   }
 
-  static Future<void> _initImpl(LogKitConfig config) async {
+  static Future<void> _initImpl(LogVaultConfig config) async {
     _config = config;
 
     _sinks.add(ConsoleSink(config.formatter));
@@ -117,9 +117,9 @@ class LogKit {
       // is unavailable. File logging/dump/share are unavailable for the
       // rest of this isolate's lifetime; console + ring buffer still work.
       developer.log(
-        'log_kit: file logging unavailable in this isolate, continuing '
+        'log_vault: file logging unavailable in this isolate, continuing '
         'with console/ring-buffer only: $error',
-        name: 'log_kit',
+        name: 'log_vault',
         level: 1000,
         stackTrace: stackTrace,
       );
@@ -141,8 +141,8 @@ class LogKit {
         // MethodChannel.setMethodCallHandler has no binary messenger to
         // register against.
         developer.log(
-          'log_kit: native log bridge unavailable in this isolate: $error',
-          name: 'log_kit',
+          'log_vault: native log bridge unavailable in this isolate: $error',
+          name: 'log_vault',
           level: 1000,
           stackTrace: stackTrace,
         );
@@ -160,7 +160,7 @@ class LogKit {
   /// a fresh unconfigured `LogFormatter()` — so redaction still applies.
   static void addSink(LogSink sink) => _sinks.add(sink);
 
-  /// The [LogFormatter] configured via [LogKitConfig.formatter], including
+  /// The [LogFormatter] configured via [LogVaultConfig.formatter], including
   /// any redaction rules. Falls back to an unconfigured default before
   /// [init] completes. Use this — not a bare `LogFormatter()` — when
   /// formatting entries for a custom [LogSink] that leaves the device.
@@ -251,15 +251,15 @@ class LogKit {
   }) {
     if (_config == null) {
       // assert() is stripped in release builds, so this call — and any
-      // entry logged before LogKit.init() completes — would otherwise be
+      // entry logged before LogVault.init() completes — would otherwise be
       // silently dropped with zero signal in production.
       developer.log(
-        'log_kit: log call dropped, LogKit.init() has not completed yet: '
+        'log_vault: log call dropped, LogVault.init() has not completed yet: '
         '$message',
-        name: 'log_kit',
+        name: 'log_vault',
         level: 900,
       );
-      assert(false, 'LogKit.init() must be called before logging.');
+      assert(false, 'LogVault.init() must be called before logging.');
       return;
     }
 
@@ -278,12 +278,12 @@ class LogKit {
 
   /// Applies the `minLevel` filter and fans [entry] out to every registered
   /// sink. Shared by [_log] (Dart call sites) and [NativeLogBridge] (native
-  /// call sites arriving over the `log_kit` MethodChannel).
+  /// call sites arriving over the `log_vault` MethodChannel).
   ///
   /// Each sink is isolated: [LogSink.write] must not throw (per its own
   /// contract), but a caller-supplied sink (most commonly `CallbackLogSink`
   /// forwarding to Crashlytics/Sentry/analytics) can still misbehave. A
-  /// single `LogKit.e(...)` call must never crash the code that called it
+  /// single `LogVault.e(...)` call must never crash the code that called it
   /// just because one downstream sink had a bad moment — that would make
   /// logging itself a source of production incidents.
   static void _dispatch(LogEntry entry) {
@@ -300,9 +300,9 @@ class LogKit {
         // to be exercised, e.g. by a test. developer.log is loud enough
         // to be seen without being able to crash the caller.
         developer.log(
-          'log_kit: sink ${sink.runtimeType} threw on write(), entry '
+          'log_vault: sink ${sink.runtimeType} threw on write(), entry '
           'dropped for that sink only: $error',
-          name: 'log_kit',
+          name: 'log_vault',
           level: 1000,
           stackTrace: stackTrace,
         );
@@ -329,10 +329,10 @@ class LogKit {
     if (dumper == null) {
       throw StateError(
         _initFuture != null
-            ? 'LogKit: file logging is unavailable in this isolate '
+            ? 'LogVault: file logging is unavailable in this isolate '
                   '(see the warning logged during init()); dumpLogs() has '
                   'nothing to export.'
-            : 'LogKit.init() must be called before dumpLogs().',
+            : 'LogVault.init() must be called before dumpLogs().',
       );
     }
     return dumper.dumpLogs(metadata: metadata);
@@ -359,10 +359,10 @@ class LogKit {
     if (dumper == null) {
       throw StateError(
         _initFuture != null
-            ? 'LogKit: file logging is unavailable in this isolate '
+            ? 'LogVault: file logging is unavailable in this isolate '
                   '(see the warning logged during init()); shareLogs() has '
                   'nothing to export.'
-            : 'LogKit.init() must be called before shareLogs().',
+            : 'LogVault.init() must be called before shareLogs().',
       );
     }
     return ShareLogDumper(dumper).share(
@@ -378,7 +378,7 @@ class LogKit {
   /// was 0 or [init] hasn't completed).
   static List<LogEntry> get recentEntries => _ringBuffer?.entries ?? const [];
 
-  static LogKitConfig? get configForTesting => _config;
+  static LogVaultConfig? get configForTesting => _config;
 
   static FileSink? get fileSinkForTesting => _fileSink;
 

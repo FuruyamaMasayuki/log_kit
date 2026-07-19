@@ -1,4 +1,4 @@
-# log_kit
+# log_vault
 
 Log retention (in-memory ring buffer + rotating file storage) and shared log
 dump/export for Flutter apps, with an optional native (Kotlin/Swift) logging
@@ -17,7 +17,7 @@ history. This README is the day-to-day usage reference; see
 - **Shared dump**: zip the log directory (+ a `metadata.json`) and hand it
   to the platform share sheet, or just get the zip `File` back and upload
   it yourself.
-- **Native bridge**: call `LogKitNative.d(tag, message)` from Kotlin or
+- **Native bridge**: call `LogVaultNative.d(tag, message)` from Kotlin or
   Swift app code and have it flow through the same Dart-side retention/
   formatting/redaction pipeline.
 
@@ -27,20 +27,20 @@ Add a `path:` dependency (this package is not published to pub.dev):
 
 ```yaml
 dependencies:
-  log_kit:
+  log_vault:
     path: ../../flutter_plugin/log
 ```
 
 ## Quick start
 
 ```dart
-import 'package:log_kit/log_kit.dart';
+import 'package:log_vault/log_vault.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await LogKit.init(
-    const LogKitConfig(
+  await LogVault.init(
+    const LogVaultConfig(
       appName: 'my_app',
       // Gate file logging on whatever your app considers "safe to log":
       // fileLoggingEnabled: () => !kReleaseMode || isInternalBuild,
@@ -54,8 +54,8 @@ Future<void> main() async {
 Then, anywhere in the app:
 
 ```dart
-LogKit.d('screen shown', tag: 'Nav');
-LogKit.e('token refresh failed', tag: 'Auth', error: e, stackTrace: st);
+LogVault.d('screen shown', tag: 'Nav');
+LogVault.e('token refresh failed', tag: 'Auth', error: e, stackTrace: st);
 ```
 
 ### Sharing logs from a settings screen
@@ -63,7 +63,7 @@ LogKit.e('token refresh failed', tag: 'Auth', error: e, stackTrace: st);
 ```dart
 ElevatedButton(
   onPressed: () async {
-    final directory = LogKit.logFilesDirectory;
+    final directory = LogVault.logFilesDirectory;
     final hasLogs = directory != null &&
         await directory.exists() &&
         await directory.list().any((_) => true);
@@ -71,7 +71,7 @@ ElevatedButton(
       // show a "no logs yet" dialog — see LogViewerPage for a ready-made one
       return;
     }
-    await LogKit.shareLogs(context, subject: 'App logs');
+    await LogVault.shareLogs(context, subject: 'App logs');
   },
   child: const Text('ログを共有'),
 )
@@ -88,19 +88,19 @@ Navigator.of(context).push(
 ### Using the zip without the share sheet
 
 ```dart
-final zipFile = await LogKit.dumpLogs(
+final zipFile = await LogVault.dumpLogs(
   metadata: {'appVersion': packageInfo.version},
 );
 await myUploadApi.upload(zipFile);
-await LogKit.disposeLastDump(); // reclaim the temp zip once you're done
+await LogVault.disposeLastDump(); // reclaim the temp zip once you're done
 ```
 
-If you don't call `disposeLastDump()`, `log_kit` still cleans up
+If you don't call `disposeLastDump()`, `log_vault` still cleans up
 automatically — the *next* `dumpLogs()`/`shareLogs()` call deletes the
 previous zip before building a new one. At most one stale zip can exist on
 disk at a time.
 
-## Configuration (`LogKitConfig`)
+## Configuration (`LogVaultConfig`)
 
 | Field | Default | Purpose |
 |---|---|---|
@@ -111,7 +111,7 @@ disk at a time.
 | `ringBufferCapacity` | 500 | In-memory entries kept for `LogViewerPage`/`recentEntries`. `0` disables the ring buffer sink |
 | `directory` | `<applicationSupportDirectory>/logs` | Override the log file location |
 | `formatter` | default `LogFormatter()` | Controls line format and redaction (see below) |
-| `enableNativeBridge` | `true` | Registers the `log_kit` MethodChannel handler so native code can log through `LogKitNative` |
+| `enableNativeBridge` | `true` | Registers the `log_vault` MethodChannel handler so native code can log through `LogVaultNative` |
 
 ## Redaction
 
@@ -120,7 +120,7 @@ over every formatted line — nothing is redacted by default, so opt in for
 anything sensitive your app logs (tokens, phone numbers, etc.):
 
 ```dart
-LogKitConfig(
+LogVaultConfig(
   appName: 'my_app',
   formatter: LogFormatter(
     redactionRules: [
@@ -132,44 +132,44 @@ LogKitConfig(
 
 ## Forwarding to Crashlytics/Sentry
 
-`log_kit` has no dependency on any crash-reporting SDK. Wire it in with
+`log_vault` has no dependency on any crash-reporting SDK. Wire it in with
 `addSink`. Sinks receive the **raw, unredacted** `LogEntry` — always format
-with `LogKit.formatter` (the configured one, redaction rules included), not
+with `LogVault.formatter` (the configured one, redaction rules included), not
 a bare `LogFormatter()`, when the formatted text leaves the device (as
 Crashlytics/Sentry breadcrumbs do):
 
 ```dart
-LogKit.addSink(CallbackLogSink((entry) {
+LogVault.addSink(CallbackLogSink((entry) {
   if (entry.level >= LogLevel.warn) {
-    FirebaseCrashlytics.instance.log(LogKit.formatter.format(entry));
+    FirebaseCrashlytics.instance.log(LogVault.formatter.format(entry));
   }
 }));
 ```
 
 ## Native logging (Kotlin/Swift)
 
-`log_kit` is a real Flutter plugin (has `android/` and `ios/` native code).
+`log_vault` is a real Flutter plugin (has `android/` and `ios/` native code).
 Call from native app code once the Flutter engine is running:
 
 ```kotlin
 // Android (Kotlin)
-LogKitNative.d("Auth", "token refreshed")
-LogKitNative.e("Push", "failed to register token", error = e.toString())
+LogVaultNative.d("Auth", "token refreshed")
+LogVaultNative.e("Push", "failed to register token", error = e.toString())
 ```
 
 ```swift
 // iOS (Swift)
-LogKitNative.d(tag: "Auth", message: "token refreshed")
-LogKitNative.e(tag: "Push", message: "failed to register token", error: "\(error)")
+LogVaultNative.d(tag: "Auth", message: "token refreshed")
+LogVaultNative.e(tag: "Push", message: "failed to register token", error: "\(error)")
 ```
 
-These forward over a `MethodChannel` to the same Dart-side `LogKit`
+These forward over a `MethodChannel` to the same Dart-side `LogVault`
 pipeline (retention, formatting, redaction, dump/share) — nothing is
 duplicated natively. **Constraint**: a native call can only reach Dart
-after `LogKit.init()` has completed in a running Flutter engine. Calls
+after `LogVault.init()` has completed in a running Flutter engine. Calls
 made before Flutter starts (e.g. `Application.onCreate()`) are dropped —
 there is no Dart isolate listening yet. Set
-`LogKitConfig(enableNativeBridge: false)` to opt out entirely.
+`LogVaultConfig(enableNativeBridge: false)` to opt out entirely.
 
 > This environment has no Android SDK / Xcode toolchain, so the native
 > Kotlin/Swift code has been reviewed but not build-verified. Confirm it
@@ -177,12 +177,12 @@ there is no Dart isolate listening yet. Set
 
 ## Isolate notes
 
-- `LogKit.init()` is idempotent: only the **first** call's config takes
+- `LogVault.init()` is idempotent: only the **first** call's config takes
   effect for the isolate's lifetime (later calls are ignored, with a
   warning logged). This matters because `init()` is safe — and often
   necessary — to call again from background isolate entry points
   (workmanager, FCM background handler).
-- `LogKit.recentEntries` (the ring buffer) is isolate-local: entries logged
+- `LogVault.recentEntries` (the ring buffer) is isolate-local: entries logged
   from a background isolate won't show up in the main isolate's
   `LogViewerPage`, though they're still written to disk and therefore
   included in `dumpLogs()`/`shareLogs()`.

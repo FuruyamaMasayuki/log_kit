@@ -9,7 +9,7 @@ import 'log_sink.dart';
 ///
 /// Isolate-local: entries logged from a background isolate (workmanager,
 /// FCM background handler, ...) do not appear in the main isolate's ring
-/// buffer, since each isolate runs its own `LogKit` instance. They are
+/// buffer, since each isolate runs its own `LogVault` instance. They are
 /// still written to disk by `FileSink` and therefore included in dumps.
 class RingBufferSink implements LogSink {
   RingBufferSink(this.capacity) : assert(capacity >= 0);

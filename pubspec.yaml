@@ -1,11 +1,11 @@
-name: log_kit
+name: log_vault
 description: >
   Reusable log retention (in-memory ring buffer + rotating file storage) and
   shared log dump/export for Flutter apps.
 version: 0.1.0
-homepage: https://github.com/FuruyamaMasayuki/log_kit
-repository: https://github.com/FuruyamaMasayuki/log_kit
-issue_tracker: https://github.com/FuruyamaMasayuki/log_kit/issues
+homepage: https://github.com/FuruyamaMasayuki/log_vault
+repository: https://github.com/FuruyamaMasayuki/log_vault
+issue_tracker: https://github.com/FuruyamaMasayuki/log_vault/issues
 
 environment:
   sdk: ^3.9.0
@@ -28,7 +28,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.flutterplugin.log_kit
-        pluginClass: LogKitPlugin
+        package: com.flutterplugin.log_vault
+        pluginClass: LogVaultPlugin
       ios:
-        pluginClass: LogKitPlugin
+        pluginClass: LogVaultPlugin

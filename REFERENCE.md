@@ -1,18 +1,18 @@
-# log_kit API reference
+# log_vault API reference
 
 Full public API surface, grouped by file. All types are exported from
-`package:log_kit/log_kit.dart`. See [README.md](README.md) for usage
+`package:log_vault/log_vault.dart`. See [README.md](README.md) for usage
 examples and [DESIGN.md](DESIGN.md) for rationale.
 
-## `LogKit` (`lib/src/log_kit.dart`)
+## `LogVault` (`lib/src/log_vault.dart`)
 
 Static facade — the main entry point for almost all usage.
 
 | Member | Signature | Notes |
 |---|---|---|
-| `init` | `static Future<void> init(LogKitConfig config)` | Idempotent — only the first call's config takes effect for the isolate's lifetime; later calls log a warning and no-op. Sets up `ConsoleSink`, `FileSink`, optionally `RingBufferSink`, `LogDumper`, and (if `config.enableNativeBridge`) `NativeLogBridge`. Never throws: if this isolate has no Flutter binding (e.g. a bare `Isolate.spawn`/`Isolate.run`), directory resolution and native-bridge attach failures are caught and logged, and logging degrades to console/ring-buffer only — see `logFilesDirectory`/`dumpLogs`/`shareLogs`. |
+| `init` | `static Future<void> init(LogVaultConfig config)` | Idempotent — only the first call's config takes effect for the isolate's lifetime; later calls log a warning and no-op. Sets up `ConsoleSink`, `FileSink`, optionally `RingBufferSink`, `LogDumper`, and (if `config.enableNativeBridge`) `NativeLogBridge`. Never throws: if this isolate has no Flutter binding (e.g. a bare `Isolate.spawn`/`Isolate.run`), directory resolution and native-bridge attach failures are caught and logged, and logging degrades to console/ring-buffer only — see `logFilesDirectory`/`dumpLogs`/`shareLogs`. |
 | `v` / `d` / `i` / `w` / `e` | `static void x(String message, {String? tag, Object? error, StackTrace? stackTrace, Map<String, Object?> context = const {}})` | Logs at the corresponding `LogLevel`. Dropped (with a `developer.log` warning + assert) if called before `init()` completes. |
-| `addSink` | `static void addSink(LogSink sink)` | Registers an additional sink, e.g. `CallbackLogSink` for Crashlytics/Sentry breadcrumb forwarding. Sinks receive the raw, unredacted `LogEntry` — format with `LogKit.formatter`, not a bare `LogFormatter()`, before sending text off-device. |
+| `addSink` | `static void addSink(LogSink sink)` | Registers an additional sink, e.g. `CallbackLogSink` for Crashlytics/Sentry breadcrumb forwarding. Sinks receive the raw, unredacted `LogEntry` — format with `LogVault.formatter`, not a bare `LogFormatter()`, before sending text off-device. |
 | `formatter` | `static LogFormatter get` | The configured `LogFormatter` (including redaction rules), or an unconfigured default before `init()` completes. |
 | `logFilesDirectory` | `static Directory? get` | `null` until `init()` completes, or permanently if this isolate's `init()` couldn't resolve a directory (degraded init, see `init`). |
 | `recentEntries` | `static List<LogEntry> get` | Snapshot of the in-memory ring buffer. Isolate-local — see README "Isolate notes". |
@@ -21,9 +21,9 @@ Static facade — the main entry point for almost all usage.
 | `disposeLastDump` | `static Future<void> disposeLastDump()` | Deletes the most recent dump's zip immediately (e.g. after an upload completes) instead of waiting for the next `dumpLogs()` call to evict it. |
 | `resetForTesting` | `static Future<void> resetForTesting()` | Test-only. Disposes all sinks/dumper/native bridge and clears static state. |
 
-## `LogKitConfig` (`lib/src/config.dart`)
+## `LogVaultConfig` (`lib/src/config.dart`)
 
-Immutable config passed to `LogKit.init`.
+Immutable config passed to `LogVault.init`.
 
 | Field | Type | Default |
 |---|---|---|
@@ -45,7 +45,7 @@ Immutable config passed to `LogKit.init`.
 
 ## `LogEntry` (`lib/src/log_entry.dart`)
 
-Immutable record built by `LogKit` for every log call (Dart or native).
+Immutable record built by `LogVault` for every log call (Dart or native).
 
 ```dart
 LogEntry({
@@ -122,7 +122,7 @@ abstract class LogSink {
     DateTime Function() now = DateTime.now, // injectable clock, tests only
   })
   ```
-  - `Future<void> init()` — creates the directory, runs startup cleanup. Must be called before the first `write()` (handled internally by `LogKit.init`).
+  - `Future<void> init()` — creates the directory, runs startup cleanup. Must be called before the first `write()` (handled internally by `LogVault.init`).
   - `Future<void> flush()` — awaits all writes issued so far on this isolate.
   - `static final RegExp fileNamePattern` — matches `log_YYYYMMDD.log` / `log_YYYYMMDD_N.log`; also used by `LogDumper` to avoid picking up unrelated files.
   - Rotates to a new file when the day changes, or when the current file would exceed `retention.maxFileBytes` (sized by UTF-8 byte length, not `String.length`). Startup cleanup deletes files older than `maxAgeDays`, then deletes oldest-by-`mtime` files until under `maxTotalBytes` — **never** by filename lexical order (breaks once a day has a double-digit suffix).
@@ -156,15 +156,15 @@ abstract class LogSink {
 
 ```dart
 NativeLogBridge({
-  MethodChannel channel = const MethodChannel('log_kit'),
+  MethodChannel channel = const MethodChannel('log_vault'),
   required void Function(LogEntry entry) onEntry,
 })
 void attach();
 Future<void> detach();
 ```
 
-Listens for `'log'` method calls on the `log_kit` channel (sent by the
-native `LogKitNative` in `android/`/`ios/`) and turns each into a
+Listens for `'log'` method calls on the `log_vault` channel (sent by the
+native `LogVaultNative` in `android/`/`ios/`) and turns each into a
 `LogEntry` for `onEntry`. Expects the call arguments map to contain
 `level`, `tag`, `message`, optional `error`, optional `platform`, optional
 `timestampMillis` (falls back to `DateTime.now()` if absent). An
@@ -176,18 +176,18 @@ unrecognized `level` string falls back to `LogLevel.info`.
 const LogViewerPage({Key? key, LogFormatter formatter = const LogFormatter()})
 ```
 
-A minimal `StatelessWidget` listing `LogKit.recentEntries` (most recent
-first) with a share button that calls `LogKit.shareLogs`, and a "no log
-files" dialog if `LogKit.logFilesDirectory` is empty. Shows only the
+A minimal `StatelessWidget` listing `LogVault.recentEntries` (most recent
+first) with a share button that calls `LogVault.shareLogs`, and a "no log
+files" dialog if `LogVault.logFilesDirectory` is empty. Shows only the
 current isolate's ring buffer — not a substitute for the full on-disk
 files that `shareLogs()` exports (see README "Isolate notes").
 
 ## Native platform API
 
-### Android — `com.flutterplugin.log_kit.LogKitNative` (Kotlin)
+### Android — `com.flutterplugin.log_vault.LogVaultNative` (Kotlin)
 
 ```kotlin
-object LogKitNative {
+object LogVaultNative {
     fun v(tag: String, message: String, error: String? = null)
     fun d(tag: String, message: String, error: String? = null)
     fun i(tag: String, message: String, error: String? = null)
@@ -196,14 +196,14 @@ object LogKitNative {
 }
 ```
 
-Registered by `LogKitPlugin` (`FlutterPlugin`) via
+Registered by `LogVaultPlugin` (`FlutterPlugin`) via
 `onAttachedToEngine`/`onDetachedFromEngine`. Calls made before the engine
 attaches (or after it detaches) are silently dropped.
 
-### iOS — `LogKitNative` (Swift)
+### iOS — `LogVaultNative` (Swift)
 
 ```swift
-public enum LogKitNative {
+public enum LogVaultNative {
     static func v(tag: String, message: String, error: String? = nil)
     static func d(tag: String, message: String, error: String? = nil)
     static func i(tag: String, message: String, error: String? = nil)
@@ -212,4 +212,4 @@ public enum LogKitNative {
 }
 ```
 
-Registered by `LogKitPlugin` (`FlutterPlugin`) via `register(with:)`.
+Registered by `LogVaultPlugin` (`FlutterPlugin`) via `register(with:)`.

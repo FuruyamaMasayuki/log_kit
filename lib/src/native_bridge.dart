@@ -4,23 +4,23 @@ import 'log_entry.dart';
 import 'log_level.dart';
 
 /// Receives log calls made by native (Kotlin/Swift) app code via the
-/// `log_kit` `MethodChannel` and turns them into [LogEntry]s for [onEntry]
-/// to dispatch to `LogKit`'s sinks.
+/// `log_vault` `MethodChannel` and turns them into [LogEntry]s for [onEntry]
+/// to dispatch to `LogVault`'s sinks.
 ///
-/// Native app code calls `LogKitNative.d(tag, message)` (Android) or
-/// `LogKitNative.d(tag: tag, message: message)` (iOS), which invokes this
+/// Native app code calls `LogVaultNative.d(tag, message)` (Android) or
+/// `LogVaultNative.d(tag: tag, message: message)` (iOS), which invokes this
 /// channel's `'log'` method with the entry's fields. See the platform
 /// plugin sources under `android/` and `ios/`.
 ///
 /// A native call can only reach Dart while a `FlutterEngine` is attached
 /// and this isolate's channel handler is registered (i.e. after
-/// `LogKit.init()` has run). Calls made from native code before that —
+/// `LogVault.init()` has run). Calls made from native code before that —
 /// e.g. from an `Application.onCreate()` that runs before Flutter starts —
 /// are silently dropped on the native side; there is no Dart isolate to
 /// receive them.
 class NativeLogBridge {
   NativeLogBridge({
-    MethodChannel channel = const MethodChannel('log_kit'),
+    MethodChannel channel = const MethodChannel('log_vault'),
     required this.onEntry,
   }) : _channel = channel;
 

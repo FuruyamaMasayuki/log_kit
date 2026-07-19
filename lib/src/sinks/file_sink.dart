@@ -68,8 +68,8 @@ class FileSink implements LogSink {
         .then((_) => _appendBytes(bytes))
         .catchError((Object error, StackTrace stackTrace) {
           developer.log(
-            'log_kit FileSink write failed: $error',
-            name: 'log_kit',
+            'log_vault FileSink write failed: $error',
+            name: 'log_vault',
             level: 1000,
             stackTrace: stackTrace,
           );
@@ -129,7 +129,7 @@ class FileSink implements LogSink {
   // Another isolate/process running its own FileSink over the same
   // directory can delete a file between when this method lists/stats it
   // and when it tries to act on it (e.g. two isolates both calling
-  // LogKit.init() around the same time). Every per-file operation below is
+  // LogVault.init() around the same time). Every per-file operation below is
   // therefore best-effort: a file that's already gone is treated as
   // "already cleaned up" rather than an error, so one isolate's cleanup
   // can never fail the other's (or this one's own) `init()`.
@@ -185,8 +185,8 @@ class FileSink implements LogSink {
 
   void _logCleanupFailure(String what, Object error, StackTrace stackTrace) {
     developer.log(
-      'log_kit FileSink startup cleanup: $what failed, skipping — $error',
-      name: 'log_kit',
+      'log_vault FileSink startup cleanup: $what failed, skipping — $error',
+      name: 'log_vault',
       level: 900,
       stackTrace: stackTrace,
     );

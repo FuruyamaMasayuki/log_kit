@@ -1,4 +1,4 @@
-package com.flutterplugin.log_kit
+package com.flutterplugin.log_vault
 
 import android.os.Handler
 import android.os.Looper
@@ -8,13 +8,13 @@ import io.flutter.plugin.common.MethodChannel
  * Native-side logging entry point. Call from any Kotlin/Java class in the
  * app, e.g.:
  * ```kotlin
- * LogKitNative.d("Auth", "token refreshed")
- * LogKitNative.e("Push", "failed to register token", error = e.toString())
+ * LogVaultNative.d("Auth", "token refreshed")
+ * LogVaultNative.e("Push", "failed to register token", error = e.toString())
  * ```
  *
- * Forwards to Dart's `LogKit` (retention, formatting, redaction, dump/share
+ * Forwards to Dart's `LogVault` (retention, formatting, redaction, dump/share
  * all stay implemented once, in Dart — see `NativeLogBridge` on the Dart
- * side) over the `log_kit` MethodChannel that [LogKitPlugin] registers.
+ * side) over the `log_vault` MethodChannel that [LogVaultPlugin] registers.
  *
  * This object is process-wide (not per-engine): with more than one
  * `FlutterEngine` alive (add-to-app / `FlutterEngineGroup`), it always
@@ -24,10 +24,10 @@ import io.flutter.plugin.common.MethodChannel
  * A call made before a `FlutterEngine` is attached (e.g. from
  * `Application.onCreate()` before Flutter starts) or after the active
  * engine detaches is silently dropped — there is no Dart isolate
- * listening yet/anymore. This mirrors `LogKit.init()`'s own pre-init drop
+ * listening yet/anymore. This mirrors `LogVault.init()`'s own pre-init drop
  * behavior on the Dart side.
  */
-object LogKitNative {
+object LogVaultNative {
     // @Volatile so a write from attach()/detachIf() (synchronized, possibly
     // on a different thread) is visible to the unsynchronized read in log()
     // below. Without it, a background-thread log() could see a stale channel
@@ -43,7 +43,7 @@ object LogKitNative {
 
     /**
      * Clears the channel only if it is still [expected] — i.e. only if no
-     * other [LogKitPlugin] instance has attached (and overwritten it)
+     * other [LogVaultPlugin] instance has attached (and overwritten it)
      * since this one attached. Called from `onDetachedFromEngine`.
      */
     @Synchronized

@@ -1,6 +1,6 @@
 import 'log_level.dart';
 
-/// A single structured log record produced by [LogKit].
+/// A single structured log record produced by [LogVault].
 class LogEntry {
   LogEntry({
     required this.timestamp,

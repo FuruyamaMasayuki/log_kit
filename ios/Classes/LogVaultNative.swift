@@ -4,13 +4,13 @@ import Foundation
 /// Native-side logging entry point. Call from any Swift/Obj-C class in the
 /// app, e.g.:
 /// ```swift
-/// LogKitNative.d(tag: "Auth", message: "token refreshed")
-/// LogKitNative.e(tag: "Push", message: "failed to register token", error: "\(error)")
+/// LogVaultNative.d(tag: "Auth", message: "token refreshed")
+/// LogVaultNative.e(tag: "Push", message: "failed to register token", error: "\(error)")
 /// ```
 ///
-/// Forwards to Dart's `LogKit` (retention, formatting, redaction, dump/share
+/// Forwards to Dart's `LogVault` (retention, formatting, redaction, dump/share
 /// all stay implemented once, in Dart — see `NativeLogBridge` on the Dart
-/// side) over the `log_kit` `FlutterMethodChannel` that `LogKitPlugin`
+/// side) over the `log_vault` `FlutterMethodChannel` that `LogVaultPlugin`
 /// registers.
 ///
 /// This type is process-wide (not per-engine): with more than one
@@ -23,8 +23,8 @@ import Foundation
 /// `application(_:didFinishLaunchingWithOptions:)` before the Flutter view
 /// controller is created) or after the active engine detaches is silently
 /// dropped — there is no Dart isolate listening yet/anymore. This mirrors
-/// `LogKit.init()`'s own pre-init drop behavior on the Dart side.
-public enum LogKitNative {
+/// `LogVault.init()`'s own pre-init drop behavior on the Dart side.
+public enum LogVaultNative {
   private static var channel: FlutterMethodChannel?
 
   static func attach(channel: FlutterMethodChannel) {
@@ -32,7 +32,7 @@ public enum LogKitNative {
   }
 
   /// Clears the channel only if it is still `expected` — i.e. only if no
-  /// other `LogKitPlugin` instance has attached (and overwritten it)
+  /// other `LogVaultPlugin` instance has attached (and overwritten it)
   /// since this one attached. Called from `detachFromEngine(for:)`.
   static func detachIf(channel expected: FlutterMethodChannel?) {
     if channel === expected {

@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:log_kit/log_kit.dart';
+import 'package:log_vault/log_vault.dart';
 
-/// Simulates a native (Kotlin/Swift) `LogKitNative` call arriving over the
-/// `log_kit` MethodChannel, the same way the platform engine would deliver
+/// Simulates a native (Kotlin/Swift) `LogVaultNative` call arriving over the
+/// `log_vault` MethodChannel, the same way the platform engine would deliver
 /// it to a real app's Dart isolate.
 Future<void> _simulateNativeLogCall(Map<Object?, Object?> arguments) async {
   final byteData = const StandardMethodCodec().encodeMethodCall(
     MethodCall('log', arguments),
   );
   await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .handlePlatformMessage('log_kit', byteData, (_) {});
+      .handlePlatformMessage('log_vault', byteData, (_) {});
 }
 
 void main() {
@@ -72,18 +72,18 @@ void main() {
       const MethodCall('somethingElse', {}),
     );
     await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .handlePlatformMessage('log_kit', byteData, (_) {});
+        .handlePlatformMessage('log_vault', byteData, (_) {});
 
     expect(received, isEmpty);
 
     await bridge.detach();
   });
 
-  test('LogKit.init() with enableNativeBridge: false does not register a handler', () async {
-    await LogKit.init(
-      LogKitConfig(
+  test('LogVault.init() with enableNativeBridge: false does not register a handler', () async {
+    await LogVault.init(
+      LogVaultConfig(
         appName: 'testapp',
-        directory: (await Directory.systemTemp.createTemp('log_kit_')).path,
+        directory: (await Directory.systemTemp.createTemp('log_vault_')).path,
         enableNativeBridge: false,
       ),
     );
@@ -97,10 +97,10 @@ void main() {
     });
 
     expect(
-      LogKit.recentEntries.where((e) => e.message == 'should be ignored'),
+      LogVault.recentEntries.where((e) => e.message == 'should be ignored'),
       isEmpty,
     );
 
-    await LogKit.resetForTesting();
+    await LogVault.resetForTesting();
   });
 }

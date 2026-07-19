@@ -2,7 +2,7 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 #
 Pod::Spec.new do |s|
-  s.name             = 'log_kit'
+  s.name             = 'log_vault'
   s.version          = '0.1.0'
   s.summary          = 'Log retention and shared log dump for Flutter apps.'
   s.description      = <<-DESC

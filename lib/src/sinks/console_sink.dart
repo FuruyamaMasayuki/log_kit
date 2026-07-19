@@ -36,7 +36,7 @@ class ConsoleSink implements LogSink {
     if (kReleaseMode) return;
     developer.log(
       _formatter.format(entry),
-      name: entry.tag ?? 'log_kit',
+      name: entry.tag ?? 'log_vault',
       level: developerLevels[entry.level] ?? 800,
       error: entry.error,
       stackTrace: entry.stackTrace,
